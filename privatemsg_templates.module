@@ -1,0 +1,193 @@
+<?php
+
+/**
+ * @file
+ *  Allow privatemsg to create and use message templates.
+ */
+
+/**
+ * Implementation of hook_perm().
+ */
+function privatemsg_templates_perm() {
+  return array(
+      'show privatemsg templates',
+      'administer privatemsg templates',
+  );
+}
+
+/**
+ * Implementation of hook_menu().
+ */
+function privatemsg_templates_menu() {
+  $items['admin/config/messaging/privatemsg/templates'] = array(
+      'title' => 'Templates',
+      'description' => 'Templates',
+      'page callback' => 'drupal_get_form',
+      'page arguments' => array('privatemsg_templates_admin_settings'),
+      'file' => 'privatemsg_templates.admin.inc',
+      'access arguments' => array('administer privatemsg templates'),
+      'type' => MENU_LOCAL_TASK,
+  );
+
+  $items['messages/templates/js'] = array(
+      'title' => 'Javascript add template form',
+      'page callback' => 'privatemsg_templates_js',
+      'file' => 'privatemsg_templates.admin.inc',
+      'access arguments' => array('administer privatemsg templates'),
+      'type' => MENU_CALLBACK,
+  );
+
+  $items['messages/templates/js_change_template'] = array(
+      'title' => 'Javascript change template body',
+      'page callback' => 'privatemsg_templates_js_change_template',
+      'file' => 'privatemsg_templates.inc',
+      'access arguments' => array('show privatemsg templates'),
+      'type' => MENU_CALLBACK,
+      'deliver' => FALSE,
+  );
+
+  return $items;
+}
+
+/**
+ * Implements hook_theme().
+ */
+function privatemsg_templates_theme() {
+  $items = array(
+      'privatemsg_templates_list' => array(
+          'render element' => 'form',
+          'file' => 'privatemsg_templates.admin.inc',
+      ),
+      'privatemsg_templates_actions' => array(
+          'render element' => 'form',
+          'file' => 'privatemsg_templates.admin.inc',
+      ),
+  );
+
+  return $items;
+}
+
+/**
+ * Implements hook_form_alter
+ */
+function privatemsg_templates_form_alter(&$form, $form_state, $form_id) {
+
+  if ($form_id == 'privatemsg_new') {
+
+    $templates = variable_get('privatemsg_templates_actions', array());
+
+    $template_options[''] = '';
+    foreach ($templates as $delta => $details) {
+      $template_options[$details['template_name']] = $details['template_name'];
+    }
+
+    // drupal_add_js(drupal_get_path('module', 'privatemsg_templates') . '/privatemsg_templates.js', 'file');
+    // $variables['scripts'] = drupal_get_js();
+
+    $form['body']['#prefix'] = '<div id="body-div">';
+    $form['body']['#suffix'] = '</div>';
+    
+    $form['templates'] = array(
+        '#type' => 'fieldset',
+        '#title' => t('Templates'),
+        '#collapsible' => TRUE,
+        '#collapsed' => TRUE,
+        '#tree' => TRUE,
+        '#weight' => 5,
+    );
+    $form['templates']['template'] = array(
+        '#type' => 'select',
+        '#title' => t('Template'),
+        '#default_value' => '',
+        '#options' => $template_options,
+        '#description' => t('List of existing templates'),
+        '#ajax' => array(
+            'callback' => 'privatemsg_templates_js_change_template',
+            'wrapper' => 'body-div',
+            'method' => 'replace',
+            'effect' => 'fade',
+        ),
+    );
+  }
+
+  return $form;
+}
+
+/**
+ * Theme the user actions form.
+ *
+ * @ingroup themeable
+ */
+function theme_privatemsg_templates_actions($form) {
+  // @todo: Something is wrong, remove this hack.
+  $form = $form['form'];
+
+  $rows = array();
+  $headers = array(
+      t('Template name'),
+      t('Template body'),
+      t('Enabled'),
+      '',
+  );
+  $form_data = element_children($form);
+
+  foreach ($form_data as $key) {
+    // Build the table row.
+    $row = array(
+        'data' => array(
+            array('data' => drupal_render($form[$key]['template_name'])),
+            array('data' => drupal_render($form[$key]['template_body'])),
+            array('data' => drupal_render($form[$key]['enabled'])),
+            array('data' => drupal_render($form[$key]['remove'])),
+        ),
+    );
+
+    // Add additional attributes to the row, such as a class for this row.
+    if (isset($form[$key]['#attributes'])) {
+      $row = array_merge($row, $form[$key]['#attributes']);
+    }
+    $rows[] = $row;
+  }
+
+  // If there are no rows, output some instructions for the user.
+  if (empty($form_data)) {
+    $rows[] = array(
+        array(
+            'data' => t("No templates have been added. click 'Add new template'."),
+            'colspan' => '4',
+        ),
+    );
+  }
+
+  $output = theme('table', array(
+      'header' => $headers,
+      'rows' => $rows
+  ));
+  $output .= drupal_render_children($form);
+
+  return $output;
+}
+
+/**
+ * Menu callback for AJAX Handling
+ */
+function privatemsg_templates_js_change_template($form, &$form_state) {
+  $output = '';
+  $selected_template = $form_state['triggering_element']['#value'];
+
+  if (!empty($selected_template)) {
+    $templates = variable_get('privatemsg_templates_actions', array());
+
+    foreach ($templates as $template) {
+      if ($template['template_name'] == $selected_template) {
+        $output = $template['template_body'];
+        break;
+      }
+    }
+  }
+  
+  # Mostrar saltos de linea
+  $output = nl2br($output);
+  $form['body']['value']['#value'] = $output;
+  return drupal_render($form['body']);
+}

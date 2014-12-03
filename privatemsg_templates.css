@@ -1,0 +1,55 @@
+privatemsg_templates_admin_settings .sticky-header {
+  /* Stop the remove button overlapping the sticky header */
+  z-index: 10;
+}
+privatemsg_templates_admin_settings .throbber {
+  margin: 4px 0;
+}
+#add-template-button, #remove-template-button {
+  height: 45px;
+  /* Stop the remove button overlapping the sticky header */
+  z-index: 1;
+}
+
+#privatemsg-templates-admin-settings table tr td:first-child {
+    vertical-align: top;
+}
+#add-template-button label {
+  line-height: 26px;
+  margin-left: 2px;
+}
+#remove-template-button {
+  width: 100px;
+  position: relative;
+}
+#remove-template-button label {
+  display: block;
+  clear: both;
+  text-align: center;
+}
+#remove-template-button input {
+  text-indent: -9999px;
+  padding: 5px;
+  margin: 0;
+  width: 24px;
+  border: 0;
+  cursor: pointer; /* Hand shaped cursor */
+  cursor: hand; /* for old versions of IE */
+}
+#add-template-button input {
+  padding: 5px 5px 5px 25px;
+  margin: 0;
+  border: 0;
+  cursor: pointer; /* Hand shaped cursor */
+  cursor: hand; /* for old versions of IE */
+}
+#add-template-button input {
+  background: transparent url('add-template-button.png') left top no-repeat;
+}
+#remove-template-button input {
+  background: transparent url('remove-template-button.png') left top no-repeat;
+  /* Only way to centre-align remove button without having AHAH throbber
+   * interfere with it */
+  margin-left: 36px;
+}
+
