@@ -1,0 +1,123 @@
+<?php
+
+/**
+ * @file
+ * Provide message templates for Privatemsg module.
+ */
+
+/**
+ * Implements hook_perm().
+ */
+function privatemsg_templates_perm() {
+  return array('administer privatemsg templates', 'use privatemsg templates');
+}
+
+/**
+ * Implements hook_menu().
+ */
+function privatemsg_templates_menu() {
+  $items['admin/config/messaging/privatemsg/templates'] = array(
+    'title'            => 'Private message templates',
+    'description'      => 'Configure private messaging template settings.',
+    'page callback'    => 'drupal_get_form',
+    'page arguments'   => array('privatemsg_templates_settings'),
+    'access arguments' => array('administer privatemsg settings'),
+    'type'             => MENU_LOCAL_TASK,
+    'weight'           => -9,
+  );
+  $items['privatemsg_templates/get_template/%'] = array(
+    'page callback' => 'privatemsg_templates_get_template',
+    'page arguments' => array(2),
+    'access arguments' => array('use privatemsg templates'),
+    'type' => MENU_CALLBACK,
+  );
+  return $items;
+}
+
+/**
+ * JSON template body back.
+ */
+function privatemsg_templates_get_template($nid) {
+  $template_type = variable_get('privatemsg_templates_content_type', NULL);
+  $node = node_load(array('nid' => $nid, 'type' => $template_type));
+  $data = (!empty($node)) ? $node->body : '';
+  drupal_json_output(array('status' => 0, 'data' => $data));
+}
+
+/**
+ * Main settings form.
+ */
+function privatemsg_templates_settings() {
+  $form = array();
+
+  $form['privatemsg_templates'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Configure Privatemsg templates'),
+    'privatemsg_templates_enable' => array(
+      '#type' => 'checkbox',
+      '#title' => t('Enable private message templates'),
+      '#default_value' => variable_get('privatemsg_templates_enable', 0),
+      '#return_value' => 1,
+    ),
+    'privatemsg_templates_content_type' => array(
+      '#type' => 'select',
+      '#title' => t('Template content type'),
+      '#default_value' => variable_get('privatemsg_templates_content_type', NULL),
+      '#options' => node_type_get_names(),
+    ),
+  );
+  return system_settings_form($form);
+}
+
+/**
+ * Add the template select to messaging form.
+ */
+function privatemsg_templates_form_privatemsg_new_alter(&$form, &$form_state) {
+  $type = variable_get('privatemsg_templates_content_type', NULL);
+  if (variable_get('privatemsg_templates_enable', 0) && !empty($type)) {
+
+    /* Would like to add some kind of intelligence here - templates by role, user specific templates, etc
+     * Probably a good idea to incorporate the template content type into this module for that?
+     */
+    $result = db_query("SELECT n.nid, n.title FROM {node} n WHERE n.type = :type", array(':type'=>$type));
+    $templates = array(t('Select a template'));
+    if($result) {
+      foreach($result as $template) {     
+        $templates[$template->nid] = $template->title;
+      }
+    }
+    /* This should probably change to an autocomplete text field in case there are large amounts of template nodes
+     *  Only a few templates needed in my case
+     */
+    $form['privatemsg']['privatemsg_templates'] = array(
+      '#type' => 'select',
+      '#title' => t('Template'),
+      '#weight' => -1,
+      '#options' => $templates,
+      '#ajax' => array(
+            'callback' => 'privatemsg_templates_change_body',
+            'wrapper' => 'body-div',
+            'method' => 'replace',
+            'effect' => 'fade',
+        ),
+    );
+  }
+}
+
+/**
+ * Menu callback for AJAX Handling
+ */
+function privatemsg_templates_change_body($form, &$form_state) {
+  $output = '';
+  $nid_template = $form_state['triggering_element']['#value'];
+  
+  if (!empty($nid_template)) {
+    //    $templates = variable_get('pm_templates_actions', array());
+    $node = node_load($nid_template);
+    $body = field_get_items('node',$node, 'body');
+    $template = $body[0]['value'];
+  }
+  
+  $form['body']['value']['#value'] = $template;
+  return drupal_render($form['body']);
+}

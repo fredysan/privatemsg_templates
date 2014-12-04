@@ -1,0 +1,5 @@
+name = Privatemsg Templates
+description = Provide privatemsg with message template functionality
+core = 7.x
+package = "Mail"
+dependencies[] = privatemsg

@@ -1,0 +1,14 @@
+<?php
+
+/**
+ * @file
+ * Remove all privatemsg_templates variables.
+ */
+
+/**
+ * Implements hook_uninstall().
+ */
+function privatemsg_templates_uninstall() {
+  variable_del('privatemsg_templates_content_type');
+  variable_del('privatemsg_templates_enable');
+}
