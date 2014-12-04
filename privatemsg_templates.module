@@ -25,23 +25,7 @@ function privatemsg_templates_menu() {
     'type'             => MENU_LOCAL_TASK,
     'weight'           => -9,
   );
-  $items['privatemsg_templates/get_template/%'] = array(
-    'page callback' => 'privatemsg_templates_get_template',
-    'page arguments' => array(2),
-    'access arguments' => array('use privatemsg templates'),
-    'type' => MENU_CALLBACK,
-  );
   return $items;
-}
-
-/**
- * JSON template body back.
- */
-function privatemsg_templates_get_template($nid) {
-  $template_type = variable_get('privatemsg_templates_content_type', NULL);
-  $node = node_load(array('nid' => $nid, 'type' => $template_type));
-  $data = (!empty($node)) ? $node->body : '';
-  drupal_json_output(array('status' => 0, 'data' => $data));
 }
 
 /**
