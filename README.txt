@@ -1,6 +1,6 @@
 Privatemsg Templates is a Drupal module that provides templates for New Privatemsg form
 
-For Drupal 6.x
+For Drupal 7.x
 
 Dependencies
  Privatemsg (http://drupal.org/project/privatemsg)
