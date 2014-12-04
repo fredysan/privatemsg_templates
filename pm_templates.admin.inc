@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Administration menu callbacks for privatemsg_templates.module.
+ * Administration menu callbacks for pm_templates.module.
  */
 
 
@@ -22,7 +22,7 @@
  * @return
  *   Part of a form with controls for sending, receiving and actions.
  */
-function _privatemsg_templates_actions_form($details, $blacklist = TRUE) {
+function _pm_templates_actions_form($details, $blacklist = TRUE) {
   $form = array(
     '#tree' => TRUE,
   );
@@ -50,13 +50,13 @@ function _privatemsg_templates_actions_form($details, $blacklist = TRUE) {
   );
   $form['remove'] = array(
     '#type' => 'submit',
-    '#submit' => array('privatemsg_templates_remove_submit'),
+    '#submit' => array('pm_templates_remove_submit'),
     '#value' => t('Remove_' . $delta),
     '#attributes' => array('class' => array('remove-template')),
     '#prefix' => '<div id="remove-template-button">',
     '#suffix' => '</div>',
     '#ajax' => array(
-      'callback' => 'privatemsg_templates_js',
+      'callback' => 'pm_templates_js',
       'wrapper' => 'templates',
     ),
   );
@@ -73,9 +73,9 @@ function _privatemsg_templates_actions_form($details, $blacklist = TRUE) {
  *   The array of settings to filter.
  * @return
  *   Array of settings, ready to be stored in the database.
- * @see privatemsg_templates_settings_submit()
+ * @see pm_templates_settings_submit()
  */
-function _privatemsg_templates_settings_filter($settings) {
+function _pm_templates_settings_filter($settings) {
   // Add-in the names of any settings to be saved into the array below.
   $save_keys = array('template_name', 'template_body', 'enabled');
   $matching = array();
@@ -91,23 +91,23 @@ function _privatemsg_templates_settings_filter($settings) {
     return $matching;
   }
   else {
-    return array_map('_privatemsg_templates_settings_filter', $settings);
+    return array_map('_pm_templates_settings_filter', $settings);
   }
 }
 
 /**
  * Menu callback for AHAH handling.
  */
-function privatemsg_templates_js($form, $form_state) {
+function pm_templates_js($form, $form_state) {
   return drupal_render($form['templates']);
 }
 
 /**
  * Submit handler for 'More' button, adds a new action.
  *
- * @see privatemsg_templates_remove_submit()
+ * @see pm_templates_remove_submit()
  */
-function privatemsg_templates_more_submit($form, &$form_state) {
+function pm_templates_more_submit($form, &$form_state) {
   unset($form_state['submit_handlers']);
   form_execute_handlers('submit', $form, $form_state);
   // Get the submitted actions, then put them into a special area of
@@ -115,38 +115,38 @@ function privatemsg_templates_more_submit($form, &$form_state) {
   $submitted_values = $form_state['values'];
   // Add an empty action.
   $submitted_values['templates'][] = array();
-  $form_state['privatemsg_templates'] = $submitted_values;
+  $form_state['pm_templates'] = $submitted_values;
   // Rebuild the form by passing our $form_state through the
-  // privatemsg_templates_settings() builder function.
+  // pm_templates_settings() builder function.
   $form_state['rebuild'] = TRUE;
 }
 
 /**
  * Submit handler for 'Remove' button, removes an action.
  *
- * @see privatemsg_templates_more_submit()
+ * @see pm_templates_more_submit()
  */
-function privatemsg_templates_remove_submit($form, &$form_state) {
+function pm_templates_remove_submit($form, &$form_state) {
   unset($form_state['submit_handlers']);
   form_execute_handlers('submit', $form, $form_state);
   $submitted_values = $form_state['values'];
   // Remove the requested action.
   $delta = $form_state['clicked_button']['#parents'][1];
   unset($submitted_values['templates'][$delta]);
-  $form_state['privatemsg_templates'] = $submitted_values;
+  $form_state['pm_templates'] = $submitted_values;
   $form_state['rebuild'] = TRUE;
 }
 
 /**
  * Menu callback for blocked user settings.
  */
-function privatemsg_templates_admin_settings($form, &$form_state) {
+function pm_templates_admin_settings($form, &$form_state) {
   // Need to cache form for AHAH, so it can be rebuilt from cache later.
   $form = array(
     '#cache' => TRUE,
     '#attached' => array(
       'css' => array(
-        drupal_get_path('module', 'privatemsg_templates') . '/privatemsg_templates.css',
+        drupal_get_path('module', 'pm_templates') . '/pm_templates.css',
       ),
     ),
   );
@@ -156,36 +156,36 @@ function privatemsg_templates_admin_settings($form, &$form_state) {
     '#tree' => TRUE,
     '#prefix' => '<div id="templates">',
     '#suffix' => '</div>',
-    '#theme' => 'privatemsg_templates_actions',
+    '#theme' => 'pm_templates_actions',
   );
 
   // Should we populate the form with data from $form_state or the database?
-  if (!isset($form_state['privatemsg_templates']['templates'])) {
+  if (!isset($form_state['pm_templates']['templates'])) {
     // TODO: Optimizar el manejo de los valores guardados ya que
     // al guardarse en variables aumenta la memoria que drupal
     // usa todo el tiempo
-    $templates = variable_get('privatemsg_templates_actions', array());
+    $templates = variable_get('pm_templates_actions', array());
   }
   else {
-    $templates = $form_state['privatemsg_templates']['templates'];
+    $templates = $form_state['pm_templates']['templates'];
   }
   // Work through each rule, adding it as a new element in
   // $form['block_actions'] ready to be themed later.
   foreach ($templates as $delta => $details) {
     $details['delta'] = $delta;
-    $form['templates'][$delta] = _privatemsg_templates_actions_form($details);
+    $form['templates'][$delta] = _pm_templates_actions_form($details);
   }
 
   // The magic AHAH callback button that adds more rows.
-  $form['privatemsg_templates_more'] = array(
+  $form['pm_templates_more'] = array(
     '#type' => 'submit',
     '#value' => t('Add new template'),
     '#weight' => 1,
     '#prefix' => '<div id="add-template-button">',
     '#suffix' => '</div>',
-    '#submit' => array('privatemsg_templates_more_submit'),
+    '#submit' => array('pm_templates_more_submit'),
     '#ajax' => array(
-      'callback' => 'privatemsg_templates_js',
+      'callback' => 'pm_templates_js',
       'wrapper' => 'templates',
       'method' => 'replace',
       'effect' => 'fade',
@@ -204,17 +204,17 @@ function privatemsg_templates_admin_settings($form, &$form_state) {
 /**
  * Submit handler for admin form.
  */
-function privatemsg_templates_admin_settings_submit($form, &$form_state) {
+function pm_templates_admin_settings_submit($form, &$form_state) {
   // We don't want it to submit when we're adding/removing actions.
   if ($form_state['clicked_button']['#id'] == 'edit-submit-form') {
     // If the form's 'block_actions' aren't set, the user has deleted all the
     // rows in the table, so we save an empty array to stop errors in the form
     // builder.
     if (isset($form_state['values']['templates'])) {
-      variable_set('privatemsg_templates_actions', _privatemsg_templates_settings_filter($form_state['values']['templates']));
+      variable_set('pm_templates_actions', _pm_templates_settings_filter($form_state['values']['templates']));
     }
     else {
-      variable_set('privatemsg_templates_actions', array());
+      variable_set('pm_templates_actions', array());
     }
     drupal_set_message(t('The configuration options have been saved.'));
   }

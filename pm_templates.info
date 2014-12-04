@@ -1,0 +1,8 @@
+name = Privatemsg Templates
+description = Allow template selection in messages creation form.
+package = Mail
+dependencies[] = privatemsg
+files[]=pm_templates.module
+files[]=pm_templates.inc
+files[]=pm_templates.admin.inc
+core = 7.x
