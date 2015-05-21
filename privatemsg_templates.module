@@ -6,13 +6,6 @@
  */
 
 /**
- * Implements hook_perm().
- */
-function privatemsg_templates_perm() {
-  return array('administer privatemsg templates', 'use privatemsg templates');
-}
-
-/**
  * Implements hook_menu().
  */
 function privatemsg_templates_menu() {
